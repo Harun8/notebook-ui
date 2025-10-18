@@ -66,44 +66,48 @@ export default function chat() {
         const {
           data: { session },
         } = await supabase.auth.getSession();
+        console.log("userrr", session?.user);
         setUserId(session.user.id);
       } catch (error) {}
     }
     getUser();
   }, []);
 
-  function sendMessage() {}
-  //   const sendMessage = async (messageText) => {
-  //     setCurrentResponse("");
-  //     client.removeChannel(channelA);
+  async function sendMessage() {
+    //   const sendMessage = async (messageText) => {
+    //     setCurrentResponse("");
+    //     client.removeChannel(channelA);
 
-  //     // empty string is false in js
-  //     if (!messageText.trim()) return;
-  //     setConversation((conversation:) => [
-  //       ...conversation,
-  //       { type: "user", text: messageText },
-  //     ]);
-  //     convHistory.push(messageText);
+    //     // empty string is false in js
+    //     if (!messageText.trim()) return;
+    //     setConversation((conversation:) => [
+    //       ...conversation,
+    //       { type: "user", text: messageText },
+    //     ]);
+    //     convHistory.push(messageText);
 
-  //     try {
-  //       setShowThinkingAnimation(true);
+    //     try {
+    //       setShowThinkingAnimation(true);
 
-  //       const response = await fetch("/api/llm", {
-  //         method: "POST",
-  //         body: JSON.stringify({
-  //           sessionId: userId,
-  //           plan: plan,
-  //           messageText: messageText,
-  //           conv_history: convHistory,
-  //           file_id: currentPdfId,
-  //           // pages: numPages
-  //         }),
-  //       });
-  //     } catch (error) {
-  //       console.error(error);
-  //       return;
-  //     }
-  //   };
+    const response = await fetch("http://localhost:3000/api/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId: userId,
+        plan: plan,
+        messageText: "what is this",
+        conv_history: [],
+        file_id: currentPdfId,
+      }),
+    });
+    //     } catch (error) {
+    //       console.error(error);
+    //       return;
+    //     }
+    //   };
+  }
 
   const onFileSelect = async (event: any) => {
     event.stopPropagation();
@@ -141,13 +145,14 @@ export default function chat() {
       formData.append("file", event.target.files[0]);
       formData.append("file_title", event.target.files[0].name);
       formData.append("file_id", file_id ?? "");
-      // formData.append("userId", userId);
+      formData.append("userId", userId ?? "");
 
-      const response = await fetch("/api/v1/parse", {
+      const response = await fetch("http://localhost:3000/api/v1/parse", {
         method: "POST",
         body: formData,
       });
 
+      console.log(response, response.ok);
       if (response.ok) {
         try {
           setProcessingPDF(false);
@@ -157,7 +162,9 @@ export default function chat() {
 
           // If you still need to parse JSON from the text
           try {
-            const data = JSON.parse(textResponse); // Try parsing as JSON
+            const data = JSON.parse(textResponse);
+            console.log(data);
+            // Try parsing as JSON
             setCurrentPdfId(data.pdfIds);
             setChatId(data.chatId);
             // history.replaceState(data, "convo", `da/chat/${data.pdfIds}`);
@@ -188,6 +195,9 @@ export default function chat() {
       }
     } catch (error) {
       setProcessingPDF(false);
+      // const { data, error } = await supabase.storage
+      //   .from("pdfs")
+      //   .remove([filePath]);
 
       console.error("error in chat page", error);
     }
@@ -295,6 +305,7 @@ export default function chat() {
   return (
     <>
       <div className="mx-12 flex flex-col lg:grid lg:grid-cols-2 gap-8 my-22 ">
+        <button onClick={sendMessage}>sendmessage</button>
         {/* Left Panel (PDF View) */}
         <div className="rounded-lg border-4 shadow-lg p-4">
           {pdf ? (
